@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - Jobs Scheduler</title>
+  <link rel="stylesheet" href="./assets/style.css" />
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <span class="logo">🗓️</span>
+      <span class="brand-title">Jobs Scheduler</span>
+      <span class="badge">Login</span>
+    </div>
+
+    <div class="topbar-actions" id="authArea"></div>
+  </div>
+
+  <div class="page">
+    <div class="card card-login">
+      <h2 class="card-title">Connexion</h2>
+      <p class="card-subtitle">Connecte-toi pour créer des évènements + gérer les utilisateurs.</p>
+
+      <div class="grid">
+        <div>
+          <div class="label">Email</div>
+          <input id="email" type="email" placeholder="admin@example.com" autocomplete="username" />
+        </div>
+        <div>
+          <div class="label">Mot de passe</div>
+          <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="btnLogin">Se connecter</button>
+        <button class="btn btn-ghost" id="btnLogout">Se déconnecter</button>
+        <span class="badge" id="tokenState">token: none</span>
+      </div>
+
+      <div id="notice" class="notice" style="display:none; margin-top:14px;"></div>
+
+      <div class="row" style="margin-top:16px">
+        <a class="btn btn-ghost" href="./calendar.html">📅 Aller au calendrier</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="./assets/app.js"></script>
+
+  <script>
+    const notice = document.getElementById('notice');
+    const tokenState = document.getElementById('tokenState');
+
+    __app.renderAuthArea(document.getElementById("authArea"));
+
+    function show(type, msg){
+      notice.style.display = 'block';
+      notice.className = 'notice ' + type;
+      notice.textContent = msg;
+    }
+    function refreshTokenState(){
+      tokenState.textContent = 'token: ' + (__app.getToken() ? 'OK' : 'none');
+    }
+    refreshTokenState();
+
+    document.getElementById('btnLogin').addEventListener('click', async () => {
+      try{
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        if (!email || !password) return show('error', 'Email et mot de passe requis.');
+
+        await __app.login(email, password);
+        refreshTokenState();
+        window.location.href = "./calendar.html";
+      }catch(e){
+        show('error', '❌ Login erreur: ' + (e.message || e));
+      }
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      __app.clearAuth();
+      refreshTokenState();
+      show('success', '✅ Déconnecté.');
+      __app.renderAuthArea(document.getElementById("authArea"));
+    });
+  </script>
+</body>
+</html>

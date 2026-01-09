@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Calendrier</title>
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
+  <link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="logo">🗓️</span>
+      <span class="brand-title">Jobs Scheduler</span>
+    </div>
+
+    <!-- ✅ ZONE ACTIONS (SÉPARÉE EN 2) -->
+    <div class="topbar-actions" style="display:flex;align-items:center;width:100%;gap:12px;">
+      
+      <!-- ⬅️ GAUCHE : boutons navigation -->
+      <div id="navLeft" style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" id="btnGoUsersTop" style="display:none;">
+          👤 Gestion utilisateurs
+        </button>
+      </div>
+
+      <!-- ➡️ DROITE : auth (login / admin / logout) -->
+      <div id="authArea" style="margin-left:auto;display:flex;gap:10px;"></div>
+    </div>
+  </div>
+
+  <div class="page" style="max-width:1100px;margin:0 auto;">
+    <div class="card" style="padding:16px;">
+      <div id="calendar"></div>
+    </div>
+
+    <div class="card" id="adminUserCard" style="margin-top:16px; display:none;">
+      <h3 class="card-title">Ajouter un utilisateur</h3>
+
+      <div class="grid">
+        <div>
+          <div class="label">Email</div>
+          <input id="newEmail" type="email" />
+        </div>
+        <div>
+          <div class="label">Mot de passe</div>
+          <input id="newPassword" type="password" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnCreateUser">➕ Créer utilisateur</button>
+        <span class="badge" id="createUserState" style="display:none;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ MODALE AJOUT EVENT (AJOUTÉE) -->
+  <div class="modal-backdrop" id="eventModalBackdrop" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Ajouter un événement</div>
+        <button class="btn btn-ghost" id="btnCloseModal">✖</button>
+      </div>
+
+      <div class="grid" style="margin-top:10px">
+        <div>
+          <div class="label">Titre</div>
+          <input id="evTitle" type="text" placeholder="Ex: Réunion" />
+        </div>
+        <div>
+          <div class="label">Catégorie</div>
+          <input id="evCategory" type="text" placeholder="Ex: Travail, Perso..." />
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:10px">
+        <div>
+          <div class="label">Début</div>
+          <input id="evStart" type="datetime-local" />
+        </div>
+        <div>
+          <div class="label">Fin</div>
+          <input id="evEnd" type="datetime-local" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:14px; justify-content:flex-end;">
+        <button class="btn btn-ghost" id="btnCancelEvent">Annuler</button>
+        <button class="btn" id="btnSaveEvent">✅ Ajouter</button>
+      </div>
+
+      <div id="eventModalNotice" class="notice" style="display:none; margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <script src="./assets/app.js"></script>
+  <script>
+    __app.renderAuthArea(document.getElementById("authArea"));
+  </script>
+  <script src="./assets/calendar.js"></script>
+</body>
+</html>

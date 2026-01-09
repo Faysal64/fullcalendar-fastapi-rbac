@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Users</title>
+  <link rel="stylesheet" href="./assets/style.css" />
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="logo">🗓️</span>
+      <span class="brand-title">Jobs Scheduler</span>
+    </div>
+
+    <div class="topbar-actions" style="display:flex;align-items:center;width:100%;gap:12px;">
+      
+      <!-- ⬅️ GAUCHE -->
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" id="btnBackCalendar">
+          📅 Calendrier
+        </button>
+      </div>
+
+      <!-- ➡️ DROITE -->
+      <div id="authArea" style="margin-left:auto;display:flex;gap:10px;"></div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="card" style="max-width:1100px;margin:0 auto;">
+      <h2 class="card-title">Gestion des utilisateurs</h2>
+
+      <!-- ✅ notice (ajouté pour tes messages) -->
+      <div id="notice" class="notice" style="display:none;"></div>
+
+      <div class="grid">
+        <div>
+          <div class="label">Email</div>
+          <input id="newEmail" type="email" />
+        </div>
+        <div>
+          <div class="label">Mot de passe</div>
+          <input id="newPassword" type="password" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="btnCreate">➕ Créer utilisateur</button>
+      </div>
+
+      <div style="margin-top:18px;">
+        <table id="usersTable" style="width:100%;"></table>
+      </div>
+    </div>
+  </div>
+
+  <script src="./assets/app.js"></script>
+  <script src="./assets/user.js"></script>
+  <script>
+    __app.renderAuthArea(document.getElementById("authArea"));
+
+    document.getElementById("btnBackCalendar").onclick = () => {
+      window.location.href = "./calendar.html";
+    };
+
+    if (!__app.getToken()) window.location.href = "./index.html";
+
+    __users.init();
+  </script>
+</body>
+</html>
