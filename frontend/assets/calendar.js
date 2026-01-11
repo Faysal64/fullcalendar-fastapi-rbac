@@ -1,141 +1,132 @@
 // frontend/assets/calendar.js
-document.addEventListener("DOMContentLoaded", async () => {
-  // ✅ render topbar auth
-  const authArea = document.getElementById("authArea");
-  if (authArea) __app.renderAuthArea(authArea);
+console.log("CALENDAR.JS LOADED");
 
-  // --------- Admin detection via API ----------
-  const token = __app.getToken();
-  const isLogged = !!token;
+// ==============================
+// INIT
+// ==============================
+const authArea = document.getElementById("authArea");
+if (authArea) __app.renderAuthArea(authArea);
 
-  const adminUserCard = document.getElementById("adminUserCard");
-  const btnGoUsersTop = document.getElementById("btnGoUsersTop");
+const token = __app.getToken();
+const isLogged = !!token;
 
-  let isAdmin = false;
+// ==============================
+// ADMIN DETECTION
+// ==============================
+const adminUserCard = document.getElementById("adminUserCard");
+const btnGoUsersTop = document.getElementById("btnGoUsersTop");
 
+let isAdmin = false;
+
+(async () => {
   if (isLogged) {
     try {
-      // ⚠️ res.ok = admin si ton endpoint GET /api/admin/users est protégé admin
       const res = await fetch(__app.API_BASE + "/api/admin/users", {
-        method: "GET",
         headers: __app.authHeaders(),
       });
       isAdmin = res.ok;
-    } catch (e) {
+    } catch {
       isAdmin = false;
     }
   }
 
-  // Affichage UI admin
   if (adminUserCard) adminUserCard.style.display = isAdmin ? "block" : "none";
 
   if (btnGoUsersTop) {
     btnGoUsersTop.style.display = isAdmin ? "inline-flex" : "none";
     btnGoUsersTop.onclick = () => (window.location.href = "./users.html");
   }
+})();
 
-  // --------- Create user block ----------
-  const btnCreateUser = document.getElementById("btnCreateUser");
-  const newEmail = document.getElementById("newEmail");
-  const newPassword = document.getElementById("newPassword");
-  const createUserState = document.getElementById("createUserState");
+// ==============================
+// CREATE USER (ADMIN)
+// ==============================
+const btnCreateUser = document.getElementById("btnCreateUser");
+const newEmail = document.getElementById("newEmail");
+const newPassword = document.getElementById("newPassword");
+const createUserState = document.getElementById("createUserState");
 
-  function userMsg(ok, text) {
-    if (!createUserState) return;
-    createUserState.style.display = "inline-flex";
-    createUserState.textContent = text;
-    createUserState.className = "badge";
-  }
+function userMsg(text) {
+  if (!createUserState) return;
+  createUserState.style.display = "inline-flex";
+  createUserState.textContent = text;
+}
 
-  if (btnCreateUser) {
-    btnCreateUser.onclick = async () => {
-      if (!__app.getToken()) return userMsg(false, "❌ Tu dois être connecté.");
-      if (!isAdmin) return userMsg(false, "⛔ Réservé à l'admin.");
+if (btnCreateUser) {
+  btnCreateUser.onclick = async () => {
+    if (!token) return userMsg("❌ Connecte-toi");
+    if (!isAdmin) return userMsg("⛔ Admin seulement");
 
-      const email = (newEmail?.value || "").trim();
-      const password = newPassword?.value || "";
-      if (!email || !password) return userMsg(false, "❌ Email + mot de passe requis");
+    const email = newEmail.value.trim();
+    const password = newPassword.value;
+    if (!email || !password) return userMsg("❌ Champs requis");
 
-      try {
-        await __app.api("/api/admin/users", {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        });
+    try {
+      await __app.api("/api/admin/users", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
 
-        userMsg(true, "✅ Utilisateur créé");
-        newEmail.value = "";
-        newPassword.value = "";
-      } catch (e) {
-        userMsg(false, "❌ " + (e.message || e));
-      }
-    };
-  }
+      userMsg("✅ Utilisateur créé");
+      newEmail.value = "";
+      newPassword.value = "";
+    } catch (e) {
+      userMsg("❌ " + e.message);
+    }
+  };
+}
 
-  // --------- Modal event ----------
-  const backdrop = document.getElementById("eventModalBackdrop");
-  const btnClose = document.getElementById("btnCloseModal");
-  const btnCancel = document.getElementById("btnCancelEvent");
-  const btnSave = document.getElementById("btnSaveEvent");
-  const notice = document.getElementById("eventModalNotice");
+// ==============================
+// MODAL EVENT
+// ==============================
+const backdrop = document.getElementById("eventModalBackdrop");
+const btnClose = document.getElementById("btnCloseModal");
+const btnCancel = document.getElementById("btnCancelEvent");
+const btnSave = document.getElementById("btnSaveEvent");
 
-  const evTitle = document.getElementById("evTitle");
-  const evCategory = document.getElementById("evCategory");
-  const evStart = document.getElementById("evStart");
-  const evEnd = document.getElementById("evEnd");
+const evTitle = document.getElementById("evTitle");
+const evCategory = document.getElementById("evCategory");
+const evStart = document.getElementById("evStart");
+const evEnd = document.getElementById("evEnd");
 
-  let pendingRange = null;
+let pendingRange = null;
 
-  function toLocalInputValue(date) {
-    const d = new Date(date);
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
+function toLocal(date) {
+  const d = new Date(date);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(
+    d.getHours()
+  )}:${p(d.getMinutes())}`;
+}
 
-  function openModal({ start, end, allDay }) {
-    pendingRange = { start, end, allDay };
+function openModal(start, end) {
+  pendingRange = { start, end };
+  evTitle.value = "";
+  evCategory.value = "";
+  evStart.value = toLocal(start);
+  evEnd.value = toLocal(end || start);
+  backdrop.style.display = "flex";
+}
 
-    evTitle.value = "";
-    evCategory.value = "";
-    if (notice) notice.style.display = "none";
+function closeModal() {
+  backdrop.style.display = "none";
+  pendingRange = null;
+}
 
-    evStart.value = toLocalInputValue(start);
-    evEnd.value = toLocalInputValue(end || start);
+if (btnClose) btnClose.onclick = closeModal;
+if (btnCancel) btnCancel.onclick = closeModal;
 
-    backdrop.style.display = "flex";
-    setTimeout(() => evTitle.focus(), 0);
-  }
-
-  function closeModal() {
-    backdrop.style.display = "none";
-    pendingRange = null;
-  }
-
-  function showModalError(msg) {
-    if (!notice) return alert(msg);
-    notice.style.display = "block";
-    notice.className = "notice error";
-    notice.textContent = msg;
-  }
-
-  if (btnClose) btnClose.onclick = closeModal;
-  if (btnCancel) btnCancel.onclick = closeModal;
-
-  if (backdrop) {
-    backdrop.addEventListener("click", (e) => {
-      if (e.target === backdrop) closeModal();
-    });
-  }
-
-  // --------- FullCalendar ----------
-  const calendarEl = document.getElementById("calendar");
-  if (!calendarEl) return;
-
+// ==============================
+// FULLCALENDAR
+// ==============================
+const calendarEl = document.getElementById("calendar");
+if (!calendarEl) {
+  console.error("❌ #calendar introuvable");
+} else {
   const calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: "dayGridMonth",
     locale: "fr",
-    height: "auto",
+    initialView: "dayGridMonth",
     selectable: true,
-    editable: true,
 
     headerToolbar: {
       left: "prev,next today",
@@ -143,61 +134,58 @@ document.addEventListener("DOMContentLoaded", async () => {
       right: "dayGridMonth,timeGridWeek,timeGridDay",
     },
 
-    select(info) {
-      if (!__app.getToken()) return alert("Connecte-toi pour ajouter un événement.");
-      openModal({ start: info.start, end: info.end, allDay: info.allDay });
-      calendar.unselect();
+    events: async (info, success, failure) => {
+      try {
+        const res = await fetch(__app.API_BASE + "/api/calendar/events", {
+          headers: __app.authHeaders(),
+        });
+        success(await res.json());
+      } catch (e) {
+        failure(e);
+      }
     },
 
     dateClick(info) {
-      if (!__app.getToken()) return alert("Connecte-toi pour ajouter un événement.");
+      if (!token) return alert("Connecte-toi");
       const start = info.date;
       const end = new Date(start.getTime() + 60 * 60 * 1000);
-      openModal({ start, end, allDay: info.allDay });
+      openModal(start, end);
     },
 
     eventClick(info) {
-      const cat = info.event.extendedProps.category;
-      const label = cat ? ` [${cat}]` : "";
-      if (confirm(`Supprimer "${info.event.title}"${label} ?`)) info.event.remove();
-    },
-
-    eventDidMount(arg) {
-      const cat = arg.event.extendedProps.category;
-      if (cat) arg.el.title = `${arg.event.title} (${cat})`;
+      if (!confirm("Supprimer cet événement ?")) return;
+      const id = info.event.id;
+      info.event.remove();
+      if (id)
+        __app.api(`/api/calendar/events/${id}`, { method: "DELETE" });
     },
   });
 
   calendar.render();
 
-  
-
+  // ==============================
+  // SAVE EVENT
+  // ==============================
   if (btnSave) {
-    btnSave.onclick = () => {
+    btnSave.onclick = async () => {
       if (!pendingRange) return;
 
       const title = evTitle.value.trim();
-      const category = evCategory.value.trim();
-      const startVal = evStart.value;
-      const endVal = evEnd.value;
+      if (!title) return alert("Titre requis");
 
-      if (!title) return showModalError("Titre requis.");
-      if (!startVal) return showModalError("Début requis.");
-      if (!endVal) return showModalError("Fin requise.");
-
-      const start = new Date(startVal);
-      const end = new Date(endVal);
-      if (end < start) return showModalError("La date de fin doit être après le début.");
-
-      calendar.addEvent({
-        title,
-        start,
-        end,
-        allDay: false,
-        extendedProps: { category },
+      await __app.api("/api/calendar/events", {
+        method: "POST",
+        body: JSON.stringify({
+          title,
+          category: evCategory.value || null,
+          start_at: new Date(evStart.value).toISOString(),
+          end_at: new Date(evEnd.value).toISOString(),
+          all_day: false,
+        }),
       });
 
       closeModal();
+      calendar.refetchEvents();
     };
   }
-});
+}

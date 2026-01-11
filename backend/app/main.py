@@ -7,7 +7,18 @@ from app.api.routes.runs import router as runs_router
 from app.api.routes.calendar import router as calendar_router
 from app.api.routes.admin import router as admin_router
 
+from app.db.session import engine
+from app.db.base import Base
+
+# ✅ IMPORTS MODELS (important, pas dans base.py)
+from app.models.user import User  # noqa: F401
+from app.models.rbac import Role, Permission  # noqa: F401
+from app.models.job import Job, Run  # noqa: F401
+from app.models.event import Event  # noqa: F401
+
 app = FastAPI(title="Jobs Scheduler API")
+
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
